@@ -1,5 +1,7 @@
 -- ====================================
--- Creación de tablas TMP
+-- TP Intro a Datawarehouring 
+-- Etapa 1 - Adquisición
+-- ====================================
 
 DROP TABLE IF EXISTS TMP_categories;
 CREATE TABLE TMP_categories(
@@ -108,23 +110,23 @@ CREATE TABLE TMP_shippers(
 
 DROP TABLE IF EXISTS TMP_suppliers;
 CREATE TABLE TMP_suppliers(
-  supplier_id TEXT PRIMARY KEY,
-  company_name TEXT,
-  contact_name TEXT,
-  contact_title TEXT,
-  address TEXT,
-  city TEXT,
-  region TEXT,
-  postalCode TEXT,
-  country TEXT,
-  phone TEXT,
-  fax TEXT,
-  home_page TEXT
+  supplier_id VARCHAR(100) PRIMARY KEY,
+  company_name VARCHAR(100),
+  contact_name VARCHAR(100),
+  contact_title VARCHAR(100),
+  address VARCHAR(100),
+  city VARCHAR(100),
+  region VARCHAR(100),
+  postalCode VARCHAR(100),
+  country VARCHAR(100),
+  phone VARCHAR(100),
+  fax VARCHAR(100),
+  home_page VARCHAR(100)
 );
 
 DROP TABLE IF EXISTS TMP_territories;
 CREATE TABLE TMP_territories(
-  territory_id TEXT PRIMARY KEY,
-  territory_description TEXT,
-  region_id TEXT FOREIGN KEY
+  territory_id VARCHAR(100) PRIMARY KEY,
+  territory_description VARCHAR(100),
+  region_id VARCHAR(100) FOREIGN KEY
 );

@@ -1,6 +1,6 @@
 /*
 ======================================================================
- SCRIPT: ga_001_create_tmp_tables.sql (Versión Corregida)
+ CREACIÓN DE TABLAS TMP
 ======================================================================
 Descripción: Crea las tablas TMP (staging tipado).
 Correcciones aplicadas:
