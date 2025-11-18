@@ -10,7 +10,7 @@ Este script contiene los bloques de código para:
 -- =====================================================================
 -- BLOQUE 1: POBLAR EL INVENTARIO (Ejecutar 1 sola vez)
 -- =====================================================================
--- Asegúrate de que tus scripts estén registrados en el inventario.
+-- Asegurarse de que los scripts estén registrados en el inventario.
 -- 'INSERT OR IGNORE' evita errores si ya existen.
 
 INSERT OR IGNORE INTO SCRIPT_INVENTORY (ScriptName, Description)
@@ -30,22 +30,22 @@ VALUES ('S-001_Create_TXT_Tables', 'creación del conjunto de tablas TXT');
 
 -- (Asumimos que el ScriptID de 'S-001_Create_TXT_Tables' es 3)
 
--- PASO 1: ANTES de ejecutar tu script principal, corre esto:
+-- PASO 1: ANTES de ejecutar  script principal, corremos esto:
 -- (Esto crea el registro 'Running')
 INSERT INTO SCRIPT_LOG (ScriptID, StartTime, Result)
 VALUES (3, CURRENT_TIMESTAMP, 'Running');
 
 
 -- PASO 2: (...)
---     AQUÍ EJECUTAS TU SCRIPT PRINCIPAL
---     (Ej: corres el archivo S-001_Create_TXT_Tables.sql)
+--     AQUÍ EJECUTAMOS EL SCRIPT PRINCIPAL
+--     (Ej: corremos el archivo S-001_Create_TXT_Tables.sql)
 -- (...)
 
 
--- PASO 3: DESPUÉS de ejecutar, corre UNO de los siguientes bloques
--- (Nunca ambos)
+-- PASO 3: DESPUÉS de ejecutar, corremos UNO de los siguientes bloques
+-- (NUNCA AMBOS)
 
--- OPCIÓN A: Si el PASO 2 fue EXITOSO, corre este bloque:
+-- OPCIÓN A: Si el PASO 2 fue EXITOSO, corremos este bloque:
 UPDATE SCRIPT_LOG
 SET EndTime = CURRENT_TIMESTAMP,
     Result = 'Success',
@@ -54,10 +54,11 @@ WHERE
     LogID = (SELECT MAX(LogID) FROM SCRIPT_LOG WHERE ScriptID = 3);
 
 
--- OPCIÓN B: Si el PASO 2 FALLÓ, corre este bloque:
+-- OPCIÓN B: Si el PASO 2 FALLÓ, corremos este bloque:
 UPDATE SCRIPT_LOG
 SET EndTime = CURRENT_TIMESTAMP,
     Result = 'Failure',
     ErrorMessage = 'Error: la tabla TXT_categories ya existe' -- (El error real)
 WHERE 
+
     LogID = (SELECT MAX(LogID) FROM SCRIPT_LOG WHERE ScriptID = 3);
