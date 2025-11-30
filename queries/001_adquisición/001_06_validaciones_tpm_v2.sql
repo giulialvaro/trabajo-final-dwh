@@ -47,6 +47,12 @@ SELECT *
 FROM TMP_customers
 WHERE company_name IS NULL;
 
+-- NUEVA: FK country inexistente
+SELECT c.*
+FROM TMP_customers c
+LEFT JOIN TMP_countries t ON c.country_id = t.country_id
+WHERE t.country_id IS NULL;
+
 
 
 /* ============================================================
@@ -81,6 +87,12 @@ FROM TMP_employees e
 LEFT JOIN TMP_employees boss ON e.reports_to = boss.employee_id
 WHERE e.reports_to IS NOT NULL
   AND boss.employee_id IS NULL;
+
+-- NUEVA: FK country inexistente
+SELECT e.*
+FROM TMP_employees e
+LEFT JOIN TMP_countries t ON e.country_id = t.country_id
+WHERE t.country_id IS NULL;
 
 
 
@@ -150,6 +162,12 @@ SELECT o.*
 FROM TMP_orders o
 LEFT JOIN TMP_shippers s ON o.ship_via = s.shipper_id
 WHERE s.shipper_id IS NULL;
+
+-- NUEVA: FK ship_country inexistente
+SELECT o.*
+FROM TMP_orders o
+LEFT JOIN TMP_countries t ON o.ship_country_id = t.country_id
+WHERE t.country_id IS NULL;
 
 -- Fechas inválidas
 SELECT *
@@ -234,6 +252,11 @@ FROM TMP_suppliers
 WHERE company_name IS NULL;
 
 
+-- NUEVA: FK country inexistente
+SELECT s.*
+FROM TMP_suppliers s
+LEFT JOIN TMP_countries t ON s.country_id = t.country_id
+WHERE t.country_id IS NULL;
 
 /* ============================================================
    TMP_REGIONS / TMP_TERRITORIES
