@@ -6,6 +6,36 @@
 
 PRAGMA foreign_keys = OFF;   -- evitamos errores durante inserts
 
+--El DELETE es una práctica estándar en la capa de Staging para garantizar la idempotencia de la ejecución del script.
+
+
+/* ===========================================================
+   0) PAISES (CATÁLOGO - NUEVA SECCIÓN)
+   =========================================================== */
+
+-- Validaciones de la capa TXT (Opcional, pero recomendado)
+SELECT country, COUNT(*) FROM (
+    SELECT country FROM TXT_customers UNION ALL
+    SELECT country FROM TXT_suppliers UNION ALL
+    SELECT country FROM TXT_employees UNION ALL
+    SELECT ship_country FROM TXT_orders
+)
+WHERE country IS NOT NULL AND TRIM(country) <> ''
+GROUP BY country
+HAVING COUNT(*) > 1000; -- Buscar problemas de capitalización/espacios
+
+DELETE FROM TMP_countries;
+
+-- Carga TMP_countries: Extraer todos los valores únicos
+INSERT INTO TMP_countries (country_name)
+SELECT DISTINCT country FROM TXT_customers WHERE country IS NOT NULL AND TRIM(country) <> ''
+UNION
+SELECT DISTINCT country FROM TXT_suppliers WHERE country IS NOT NULL AND TRIM(country) <> ''
+UNION
+SELECT DISTINCT ship_country FROM TXT_orders WHERE ship_country IS NOT NULL AND TRIM(ship_country) <> ''
+UNION
+SELECT DISTINCT country FROM TXT_employees WHERE country IS NOT NULL AND TRIM(country) <> '';
+
 
 /* ===========================================================
    1) CATEGORIES
@@ -38,27 +68,47 @@ FROM TXT_categories;
 /* ===========================================================
    2) CUSTOMERS
    =========================================================== */
-
--- PK duplicada
+-- PK duplicada 
 SELECT customer_id, COUNT(*)
 FROM TXT_customers
 GROUP BY customer_id
 HAVING COUNT(*) > 1;
 
--- Carga TMP
+
+
+-- Carga TMP_customers (MODIFICADA)
 DELETE FROM TMP_customers;
 
 INSERT INTO TMP_customers
-SELECT *
-FROM TXT_customers;
+SELECT 
+  c.customer_id,
+  c.company_name,
+  c.contact_name,
+  c.contact_title,
+  c.address,
+  c.city,
+  c.region,
+  c.postalCode,
+  t.country_id, -- << AHORA ES ID >>
+  c.phone,
+  c.fax
+FROM TXT_customers c
+LEFT JOIN TMP_countries t ON c.country = t.country_name;
+
+-- NUEVA VALIDACIÓN: FK country
+SELECT c.*
+FROM TMP_customers c
+LEFT JOIN TMP_countries t ON c.country_id = t.country_id
+WHERE c.country_id IS NOT NULL
+  AND t.country_id IS NULL;
+
 
 
 /* ===========================================================
    3) EMPLOYEES
-   * Corrección: TMP_employees SIN FK para permitir carga estable
    =========================================================== */
 
--- Validaciones TXT
+-- 0. Validaciones TXT (Verificación de Calidad antes de la Carga)
 SELECT employee_id, COUNT(*)
 FROM TXT_employees
 GROUP BY employee_id
@@ -84,7 +134,9 @@ FROM TXT_employees
 WHERE hire_date NOT GLOB '????-??-??*'
   AND hire_date IS NOT NULL;
 
--- RECREAR TMP_employees SIN FK
+
+-- 1. RECREAR TMP_employees SIN FK (Necesario para carga estable y evitar errores de FK self-referencial)
+-- Nota: Esta estructura temporal debe coincidir con la normalización de country_id.
 DROP TABLE IF EXISTS TMP_employees;
 
 CREATE TABLE TMP_employees(
@@ -96,42 +148,47 @@ CREATE TABLE TMP_employees(
   birth_date TEXT,
   hire_date TEXT,
   address TEXT,
-  city TEXT, 
+  city TEXT,
   region TEXT,
   postal_code TEXT,
-  country TEXT,
+  country_id INTEGER, -- Normalizado a ID
   home_phone TEXT,
   extension TEXT,
   photo BLOB,
   notes TEXT,
   reports_to INTEGER,
   photo_path TEXT
+  -- Las FKs (reports_to y country_id) se validan manualmente después de la carga.
 );
 
--- Carga TMP
+
+-- 2. Carga TMP_employees (MODIFICADA: Normalización y CAST)
+-- Nota: No se requiere DELETE aquí si la tabla se acaba de recrear.
 INSERT INTO TMP_employees
 SELECT
-  CAST(employee_id AS INTEGER),
-  last_name,
-  first_name,
-  title,
-  title_of_courtesy,
-  birth_date,
-  hire_date,
-  address,
-  city,
-  region,
-  postalCode,
-  country,
-  home_phone,
-  extension,
-  photo,
-  notes,
-  CAST(NULLIF(TRIM(reports_to), '') AS INTEGER),
-  photo_path
-FROM TXT_employees;
+  CAST(e.employee_id AS INTEGER),
+  e.last_name,
+  e.first_name,
+  e.title,
+  e.title_of_courtesy,
+  e.birth_date,
+  e.hire_date,
+  e.address,
+  e.city,
+  e.region,
+  e.postalCode,
+  t.country_id,  -- Normalización: Obtener ID del país
+  e.home_phone,
+  e.extension,
+  e.photo,
+  e.notes,
+  CAST(NULLIF(TRIM(e.reports_to), '') AS INTEGER),
+  e.photo_path
+FROM TXT_employees e
+LEFT JOIN TMP_countries t ON e.country = t.country_name;
 
--- Validación self-referential manual
+
+-- 3. Validación self-referential manual (Buscando jefes huérfanos)
 SELECT e.*
 FROM TMP_employees e
 LEFT JOIN TMP_employees b 
@@ -140,6 +197,12 @@ WHERE e.reports_to IS NOT NULL
   AND b.employee_id IS NULL;
 
 
+-- 4. NUEVA VALIDACIÓN: FK country (Buscando IDs de país huérfanos)
+SELECT e.*
+FROM TMP_employees e
+LEFT JOIN TMP_countries t ON e.country_id = t.country_id
+WHERE e.country_id IS NOT NULL
+  AND t.country_id IS NULL;
 /* ===========================================================
    4) EMPLOYEE_TERRITORIES
    =========================================================== */
@@ -223,69 +286,32 @@ WHERE p.product_id IS NULL;
    6) ORDERS
    =========================================================== */
 
-SELECT order_id, COUNT(*)
-FROM TXT_orders
-GROUP BY order_id
-HAVING COUNT(*) > 1;
-
-SELECT *
-FROM TXT_orders
-WHERE customer_id IS NULL OR customer_id = '';
-
-SELECT *
-FROM TXT_orders
-WHERE employee_id <> ''
-  AND CAST(employee_id AS INTEGER) IS NULL;
-
-SELECT *
-FROM TXT_orders
-WHERE ship_via <> ''
-  AND CAST(ship_via AS INTEGER) IS NULL;
-
-SELECT *
-FROM TXT_orders
-WHERE order_date NOT GLOB '????-??-??*'
-  AND order_date IS NOT NULL;
-
-DELETE FROM TMP_orders;
-
+-- Carga TMP_orders (MODIFICADA)
 INSERT INTO TMP_orders
 SELECT
-  CAST(order_id AS INTEGER),
-  customer_id,
-  CAST(employee_id AS INTEGER),
-  order_date,
-  required_date,
-  shipped_date,
-  CAST(ship_via AS INTEGER),
-  CAST(freight AS REAL),
-  ship_name,
-  ship_address,
-  ship_city,
-  ship_region,
-  ship_postal_code,
-  ship_country
-FROM TXT_orders;
+  CAST(o.order_id AS INTEGER),
+  o.customer_id,
+  CAST(o.employee_id AS INTEGER),
+  o.order_date,
+  o.required_date,
+  o.shipped_date,
+  CAST(o.ship_via AS INTEGER),
+  CAST(o.freight AS REAL),
+  o.ship_name,
+  o.ship_address,
+  o.ship_city,
+  o.ship_region,
+  o.ship_postal_code,
+  t.country_id -- << AHORA ES ID (ship_country_id) >>
+FROM TXT_orders o
+LEFT JOIN TMP_countries t ON o.ship_country = t.country_name;
 
--- FK customer
+-- NUEVA VALIDACIÓN: FK ship_country
 SELECT o.*
 FROM TMP_orders o
-LEFT JOIN TMP_customers c USING(customer_id)
-WHERE c.customer_id IS NULL;
-
--- FK employee
-SELECT o.*
-FROM TMP_orders o
-LEFT JOIN TMP_employees e ON o.employee_id = e.employee_id
-WHERE e.employee_id IS NULL;
-
--- FK shipper
-SELECT o.*
-FROM TMP_orders o
-LEFT JOIN TMP_shippers s ON o.ship_via = s.shipper_id
-WHERE s.shipper_id IS NULL;
-
-
+LEFT JOIN TMP_countries t ON o.ship_country_id = t.country_id
+WHERE o.ship_country_id IS NOT NULL
+  AND t.country_id IS NULL;
 /* ===========================================================
    7) PRODUCTS
    =========================================================== */
@@ -385,34 +411,32 @@ FROM TXT_shippers;
    10) SUPPLIERS
    =========================================================== */
 
-SELECT supplier_id, COUNT(*)
-FROM TXT_suppliers
-GROUP BY supplier_id
-HAVING COUNT(*) > 1;
-
-SELECT *
-FROM TXT_suppliers
-WHERE supplier_id IS NOT NULL
-  AND CAST(supplier_id AS INTEGER) IS NULL;
-
+-- Carga TMP_suppliers (MODIFICADA)
 DELETE FROM TMP_suppliers;
 
 INSERT INTO TMP_suppliers
 SELECT
-  CAST(supplier_id AS INTEGER),
-  company_name,
-  contact_name,
-  contact_title,
-  address,
-  city,
-  region,
-  postalCode,
-  country,
-  phone,
-  fax,
-  home_page
-FROM TXT_suppliers;
+  CAST(s.supplier_id AS INTEGER),
+  s.company_name,
+  s.contact_name,
+  s.contact_title,
+  s.address,
+  s.city,
+  s.region,
+  s.postalCode,
+  t.country_id,  -- << AHORA ES ID >>
+  s.phone,
+  s.fax,
+  s.home_page
+FROM TXT_suppliers s
+LEFT JOIN TMP_countries t ON s.country = t.country_name;
 
+-- NUEVA VALIDACIÓN: FK country
+SELECT s.*
+FROM TMP_suppliers s
+LEFT JOIN TMP_countries t ON s.country_id = t.country_id
+WHERE s.country_id IS NOT NULL
+  AND t.country_id IS NULL;
 
 /* ===========================================================
    11) TERRITORIES
