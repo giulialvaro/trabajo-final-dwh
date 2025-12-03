@@ -2,13 +2,13 @@
 
  Este repositorio alberga la implementación de un **Data Warehouse Analítico (DWA)** basado en el modelo Northwind, enriquecido con datos geográficos y construido utilizando **SQL estándar (SQLite)**.
 
-[cite_start]El proyecto demuestra el flujo de datos **end-to-end** en un DWA, cubriendo la adquisición [cite: 3][cite_start], la gestión de la calidad (DQM) [cite: 30][cite_start], la gestión de metadata (MET) [cite: 30][cite_start], el modelado dimensional [cite: 3] y la preparación para la explotación analítica.
+El proyecto demuestra el flujo de datos **end-to-end** en un DWA, cubriendo la adquisición [cite: 3][cite_start], la gestión de la calidad (DQM) [cite: 30][cite_start], la gestión de metadata (MET) [cite: 30][cite_start], el modelado dimensional [cite: 3] y la preparación para la explotación analítica.
 
 ---
 
 ## 🏗️ Arquitectura de Datos: Capas del DWA
 
-[cite_start]La implementación sigue las mejores prácticas, separando el Data Warehouse en capas de responsabilidad dentro de una única base de datos, utilizando prefijos estandarizados[cite: 216]:
+La implementación sigue las mejores prácticas, separando el Data Warehouse en capas de responsabilidad dentro de una única base de datos, utilizando prefijos estandarizados:
 
 | Capa | Prefijo | Propósito | Equivalente (Medallion) |
 | :--- | :--- | :--- | :--- |
