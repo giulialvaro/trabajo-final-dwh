@@ -49,7 +49,14 @@ Las siguientes etapas han sido implementadas y documentadas a través de scripts
 * **Ingesta World Data:** Scripts para la ingesta y tipado de datos geográficos, creando la nueva dimensión **`DWA_DimCountry`**.
 * **Estandarización de Países:** Implementación de una lógica de mapeo (`DIM_CountryMapping`) para corregir inconsistencias de nombres de países (ej. "UK" a "United Kingdom") y asegurar la referencialidad.
 * **Validación de Integración:** Scripts que verifican y registran en DQM la integridad referencial entre las dimensiones existentes y la nueva `DWA_DimCountry`.
+**Actualización (Ingesta2):** Persistir en área temporal (TXT/TMP)los datos de la Ingesta2, repetir validaciones , e implementar la lógica de **Altas, Bajas y Modificaciones** en el DWA.
+**Memoria Institucional:** Scripts para insertar en la capa de Memoria (`DWM_`) para persistir la historia de los campos que han sido modificados.
 
+### 4. 🌐 Etapa 4: Publicación y explotación
+**Objetivo:** Publicar un Producto de Datos (`DPxx_`) y desarrollar los tableros de visualización correspondientes (Analítico y DQM).
+
+* **Publicación:** Script de creación del producto de datos
+* **Explotación:** Desarrollo de tablero
 ---
 
 ## 🛠️ Tecnologías y Herramientas
@@ -57,15 +64,5 @@ Las siguientes etapas han sido implementadas y documentadas a través de scripts
 * **Base de Datos:** SQLite (Utilizando comandos SQL Estándar).
 * **Herramientas:** SQLLiteStudio.
 * **Versionamiento:** Git / GitHub.
-
----
-
-## ⏳ Próximos Pasos (Pendientes)
-
-El trabajo a futuro se centrará en los siguientes requisitos clave del proyecto, correspondientes a la **Etapa 3 (Actualización)** y la **Etapa 4 (Publicación)**:
-
-1. **Actualización (Ingesta2):** Persistir en área temporal (TXT/TMP)los datos de la Ingesta2, repetir validaciones , e implementar la lógica de **Altas, Bajas y Modificaciones** en el DWA.
-2.  **Memoria Institucional:** Desarrollar la capa de Memoria (`DWM_`) para persistir la historia de los campos que han sido modificados.
-3.  **Publicación y Explotación:** Publicar un Producto de Datos (`DPxx_`) y desarrollar los tableros de visualización correspondientes (Analítico y DQM).
 
 ---
