@@ -17,7 +17,7 @@ La implementación sigue las mejores prácticas, separando el Data Warehouse en 
 | **Analítica** | `DWA_` | **Modelo Dimensional** (Esquema Estrella) optimizado para consultas analíticas. | **Gold** |
 | **Calidad** | `DQM_` | **Data Quality Mart**. Persistencia de indicadores, perfiles y resultados de validación de datos. | **Silver** |
 | **Control** | `MET_` | **Metadata**. Diccionario de entidades/campos y registro de procesos. | **Silver** |
-| **Memoria** | `DWM_` | *(Pendiente de Implementación)* Capa para la persistencia del historial de cambios (SCD). | **Gold** |
+| **Memoria** | `DWM_` | Capa para la persistencia del historial de cambios (SCD). | **Gold** |
 
 ---
 
