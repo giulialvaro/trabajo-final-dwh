@@ -59,6 +59,11 @@ Las siguientes etapas han sido implementadas y documentadas a través de scripts
 * **Explotación:** Desarrollo de tablero
 ---
 
+## 📊 Dashboarding
+Se utilizó PowerBI para generar un tablero orientado al equipo de Marketing o Business Intelligence, donde pueden navegar y analizar la performance de las ventas mensuales, por país, cliente y categoría de producto. 
+
+---
+
 ## 🛠️ Tecnologías y Herramientas
 
 * **Base de Datos:** SQLite (Utilizando comandos SQL Estándar).
